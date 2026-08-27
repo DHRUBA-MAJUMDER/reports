@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Convert district reporting Excel workbooks into print-ready PDF reports." />
+    <title>ReportForge — Excel to PDF</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+    <meta property="og:image" content="https://bolt.new/static/og_default.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://bolt.new/static/og_default.png">
+</head>
+  <body>
+    <div class="page-shell">
+      <header class="topbar">
+        <a class="brand" href="#top" aria-label="ReportForge home">
+          <span class="brand-mark"><span></span><span></span><span></span></span>
+          <span>ReportForge</span>
+        </a>
+        <div class="topbar-note"><span class="secure-dot"></span> Runs privately in your browser</div>
+      </header>
+
+      <main id="top">
+        <section class="hero">
+          <div class="eyebrow">REPORT AUTOMATION <span></span> 01</div>
+          <h1>From spreadsheet<br /><em>to ready-to-share.</em></h1>
+          <p class="hero-copy">Upload your district reporting workbook and turn it into a clear, professional PDF in seconds.</p>
+        </section>
+
+        <section class="workspace" aria-label="Excel to PDF converter">
+          <div class="upload-panel" id="dropZone">
+            <input id="fileInput" type="file" accept=".xlsx,.xls,.csv" hidden />
+            <div class="upload-icon"><span class="file-shape"></span><span class="upload-arrow">↑</span></div>
+            <h2>Drop your Excel file here</h2>
+            <p>or choose a file from your computer</p>
+            <button class="primary-button" id="browseButton" type="button">Choose Excel file <span>→</span></button>
+            <div class="file-types"><span> XLSX </span><span> XLS </span><span> CSV </span><small>Maximum 10 MB</small></div>
+            <div class="drag-message" id="dragMessage">Release to upload</div>
+          </div>
+
+          <aside class="side-panel">
+            <div class="panel-heading"><span class="step-number">01</span><div><p>INPUT FILE</p><h3>Your workbook</h3></div></div>
+            <div class="file-card empty-card" id="fileCard"><div class="file-card-icon">XLS</div><div class="file-card-copy"><strong id="fileName">No file selected</strong><span id="fileMeta">Upload a workbook to begin</span></div><button class="icon-button" id="removeFile" type="button" aria-label="Remove file" hidden>×</button></div>
+            <div class="panel-divider"></div>
+            <div class="panel-heading"><span class="step-number">02</span><div><p>OUTPUT STYLE</p><h3>Report settings</h3></div></div>
+            <label class="field-label" for="reportTitle">Report title</label>
+            <input class="text-input" id="reportTitle" value="District Wise Meal Served Statistics" />
+            <div class="setting-row"><div><strong>Landscape layout</strong><span>Best for wide tables</span></div><label class="switch"><input id="landscapeToggle" type="checkbox" checked /><span></span></label></div>
+            <button class="generate-button" id="generateButton" type="button" disabled><span class="button-icon">↓</span> Generate PDF <span class="button-arrow">→</span></button>
+            <p class="privacy-note"><span>◉</span> Your file is processed locally and never uploaded.</p>
+          </aside>
+        </section>
+
+        <section class="preview-section" id="previewSection" hidden>
+          <div class="preview-header"><div><div class="eyebrow">LIVE PREVIEW <span></span> 02</div><h2>Report ready to generate</h2></div><div class="record-count" id="recordCount">0 records</div></div>
+          <div class="preview-card"><div class="preview-toolbar"><span class="preview-dot"></span><strong id="previewTitle">District report</strong><span class="preview-date" id="previewDate"></span></div><div class="table-wrap"><table id="previewTable"></table></div></div>
+        </section>
+
+        <section class="how-section"><div class="eyebrow">THE SIMPLE WAY <span></span> 03</div><div class="how-grid"><div><h2>Clean data in.<br /><em>Clear reports out.</em></h2></div><div class="how-step"><span>01</span><strong>Upload once</strong><p>Drop in your Excel workbook. We’ll detect the report columns automatically.</p></div><div class="how-step"><span>02</span><strong>Review quickly</strong><p>Check the live preview and adjust the report title before exporting.</p></div><div class="how-step"><span>03</span><strong>Share confidently</strong><p>Download a print-ready PDF with percentage highlights and totals.</p></div></div></section>
+      </main>
+      <footer><span>REPORTFORGE</span><span>Excel to PDF, made simple.</span></footer>
+    </div>
+    <div class="toast" id="toast" role="status"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+    <script type="module" src="script.js"></script>
+  </body>
+</html>
