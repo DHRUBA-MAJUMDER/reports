@@ -37,7 +37,7 @@
     return found;
   }
   function valueFor(row, headers, names) { const key = findColumn(headers, names); return key ? row[key] : ''; }
-  function displayNumber(value) { const number = Number(String(value).replace(/,/g, '')); return Number.isFinite(number) && String(value).trim() !== '' ? number.toLocaleString('en-IN') : String(value ?? ''); }
+  function displayNumber(value) { const number = Number(String(value).replace(/,/g, '')); return Number.isFinite(number) && String(value).trim() !== '' ? String(number) : String(value ?? ''); }
   function numericValue(value) { const number = Number(String(value).replace(/,/g, '')); return Number.isFinite(number) ? number : 0; }
   function percent(part, whole) { const result = numericValue(whole) ? (numericValue(part) / numericValue(whole)) * 100 : 0; return `${result.toFixed(2)}%`; }
   function showToast(message) { toast.textContent = message; toast.classList.add('show'); window.setTimeout(() => toast.classList.remove('show'), 3200); }
@@ -87,13 +87,18 @@
       { label: '#', get: (_, index) => index + 1 },
       { label: 'District', get: (row) => valueFor(row, headers, aliases.district) },
       { label: 'Total schools', get: (row) => displayNumber(valueFor(row, headers, aliases.totalSchools)) },
-      { label: 'Meal schools', get: (row) => displayNumber(valueFor(row, headers, aliases.mealSchools)) },
-      { label: 'Reported %', get: (row) => percent(valueFor(row, headers, aliases.mealSchools), valueFor(row, headers, aliases.totalSchools)), percentage: true },
+      { label: 'M-School Reported', get: (row) => displayNumber(valueFor(row, headers, aliases.mealSchools)) },
+      { label: 'Reporting %', get: (row) => percent(valueFor(row, headers, aliases.mealSchools), valueFor(row, headers, aliases.totalSchools)), percentage: true },
       { label: 'Students enrolled', get: (row) => displayNumber(valueFor(row, headers, aliases.studentCount)) },
-      { label: 'Daily schools', get: (row) => displayNumber(valueFor(row, headers, aliases.dailySchools)) },
-      { label: 'Meals served', get: (row) => displayNumber(valueFor(row, headers, aliases.mealsServed)) }
+      { label: 'Daily schools Reported', get: (row) => displayNumber(valueFor(row, headers, aliases.dailySchools)) },
+      { label: 'T-Meal Served', get: (row) => displayNumber(valueFor(row, headers, aliases.mealsServed)) }
     ];
-    previewTable.innerHTML = `<thead><tr>${columns.map((column) => `<th>${column.label}</th>`).join('')}</tr></thead><tbody>${state.rows.slice(0, 50).map((row, index) => `<tr>${columns.map((column) => `<td class="${column.percentage ? 'percentage' : ''}">${column.get(row, index)}</td>`).join('')}</tr>`).join('')}</tbody>`;
+    const sortedRows = state.rows.map(row => {
+      const total = valueFor(row, headers, aliases.totalSchools);
+      const daily = valueFor(row, headers, aliases.dailySchools);
+      return { row, sortKey: numericValue(total) ? (numericValue(daily) / numericValue(total)) * 100 : 0 };
+    }).sort((a, b) => b.sortKey - a.sortKey).map(item => item.row);
+    previewTable.innerHTML = `<thead><tr>${columns.map((column) => `<th>${column.label}</th>`).join('')}</tr></thead><tbody>${sortedRows.slice(0, 50).map((row, index) => `<tr>${columns.map((column) => `<td class="${column.percentage ? 'percentage' : ''}">${column.get(row, index)}</td>`).join('')}</tr>`).join('')}</tbody>`;
     recordCount.textContent = `${state.rows.length} record${state.rows.length === 1 ? '' : 's'}`;
     previewTitle.textContent = reportTitle.value || 'District report';
     const date = valueFor(state.rows[0], headers, aliases.date);
@@ -103,24 +108,35 @@
 
   function colorForPercent(value) {
     const num = parseFloat(value);
-    if (num >= 100) return [30, 174, 115];
-    if (num >= 85) return [246, 189, 70];
-    return [228, 82, 69];
+    if (num >= 100) return [200, 230, 201];
+    if (num >= 85) return [255, 249, 196];
+    if (num >= 50) return [179, 229, 252];
+    return [255, 205, 210];
+  }
+  function textColorForPercent(value) {
+    const num = parseFloat(value);
+    if (num >= 100) return [27, 94, 32];
+    if (num >= 85) return [245, 127, 23];
+    if (num >= 50) return [0, 0, 0];
+    return [183, 28, 28];
   }
 
   function drawHeader(doc, pageWidth, title, reportDate, districtCount) {
-    doc.setFillColor(244, 241, 235); doc.rect(0, 0, pageWidth, 26, 'F');
-    doc.setTextColor(16, 42, 67); doc.setFont('helvetica', 'bold'); doc.setFontSize(13); doc.text(title.toUpperCase(), 10, 10);
-    doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(88, 105, 118); doc.text(`Reporting date: ${reportDate}  ·  ${districtCount} districts`, 10, 17);
+    doc.setFillColor(244, 241, 235); doc.rect(0, 0, pageWidth, 30, 'F');
+    doc.setTextColor(16, 42, 67); doc.setFont('helvetica', 'bold'); doc.setFontSize(13); doc.text(title.toUpperCase(), pageWidth / 2, 9, { align: 'center' });
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(88, 105, 118); doc.text(`${districtCount} districts`, pageWidth / 2, 15, { align: 'center' });
+    doc.setFillColor(16, 42, 67); doc.roundedRect(pageWidth / 2 - 42, 18, 84, 8, 1.5, 1.5, 'F');
+    doc.setTextColor(255, 255, 255); doc.setFont('helvetica', 'bold'); doc.setFontSize(8.5); doc.text(`Reporting Date: ${reportDate}`, pageWidth / 2, 23.5, { align: 'center' });
   }
 
-  function drawLegend(doc, startY) {
+  function drawLegend(doc, startY, pageWidth) {
     doc.setFontSize(7.5); doc.setFont('helvetica', 'bold'); doc.setTextColor(16, 42, 67);
     doc.text('Colour reference:', 10, startY);
     const legendItems = [
-      { color: [30, 174, 115], label: '100% — Full reporting' },
-      { color: [246, 189, 70], label: '85–99% — Near full' },
-      { color: [228, 82, 69], label: 'Below 85% — Needs attention' }
+      { color: [200, 230, 201], label: '100%' },
+      { color: [255, 249, 196], label: '85–99%' },
+      { color: [179, 229, 252], label: '50–85%' },
+      { color: [255, 205, 210], label: 'Below 50% — Needs attention' }
     ];
     let legendX = 38;
     legendItems.forEach((item) => {
@@ -138,7 +154,14 @@
     const headers = state.headers;
     const reportDate = valueFor(state.rows[0], headers, aliases.date) || new Date().toLocaleDateString('en-GB');
     const title = reportTitle.value.trim() || 'District Wise Meal Served Statistics';
-    const body = state.rows.map((row, index) => {
+
+    const sortedRows = state.rows.map(row => {
+      const total = valueFor(row, headers, aliases.totalSchools);
+      const daily = valueFor(row, headers, aliases.dailySchools);
+      return { row, sortKey: numericValue(total) ? (numericValue(daily) / numericValue(total)) * 100 : 0 };
+    }).sort((a, b) => b.sortKey - a.sortKey).map(item => item.row);
+
+    const body = sortedRows.map((row, index) => {
       const total = valueFor(row, headers, aliases.totalSchools);
       const meal = valueFor(row, headers, aliases.mealSchools);
       const daily = valueFor(row, headers, aliases.dailySchools);
@@ -163,13 +186,13 @@
       drawHeader(doc, pageWidth, title, reportDate, state.rows.length);
 
       doc.autoTable({
-        startY: 29,
-        head: [['S/N', 'District', 'Total schools', 'Schools reported', 'Reported %', 'Daily schools', 'Reported %', 'Meal served']],
+        startY: 33,
+        head: [['S/N', 'District', ['Total school'], ['M-School Reported'], ['Reporting %'], ['Daily schools Reported'], ['Reporting %'], ['T-Meal served']]],
         body,
         theme: 'grid',
-        margin: { left: 10, right: 10, top: 29, bottom: 18 },
-        styles: { font: 'helvetica', fontSize, cellPadding, lineColor: [40, 40, 40], lineWidth: .12, textColor: [20, 20, 20], overflow: 'hidden', halign: 'center' },
-        headStyles: { fillColor: [16, 42, 67], textColor: [255, 255, 255], fontStyle: 'bold', halign: 'center' },
+        margin: { left: 10, right: 10, top: 33, bottom: 18 },
+        styles: { font: 'helvetica', fontSize, cellPadding, lineColor: [40, 40, 40], lineWidth: .12, textColor: [20, 20, 20], overflow: 'linebreak', halign: 'center' },
+        headStyles: { fillColor: [16, 42, 67], textColor: [255, 255, 255], fontStyle: 'bold', halign: 'center', cellPadding: Math.min(cellPadding, 2) },
         columnStyles: { 0: { halign: 'center', cellWidth: 'auto' }, 1: { halign: 'center', cellWidth: 'auto' }, 2: { halign: 'center', cellWidth: 'auto' }, 3: { halign: 'center', cellWidth: 'auto' }, 4: { halign: 'center', cellWidth: 'auto' }, 5: { halign: 'center', cellWidth: 'auto' }, 6: { halign: 'center', cellWidth: 'auto' }, 7: { halign: 'center', cellWidth: 'auto' } },
         pageBreak: 'avoid',
         rowPageBreak: 'avoid',
@@ -179,14 +202,19 @@
           if (data.section === 'body' && isPercentCol) {
             const value = parseFloat(data.cell.raw);
             data.cell.styles.fillColor = colorForPercent(value);
-            data.cell.styles.textColor = [255, 255, 255];
+            data.cell.styles.textColor = textColorForPercent(value);
             data.cell.styles.fontStyle = 'bold';
           }
-          if (isTotalRow) {
-            if (!isPercentCol) data.cell.styles.fillColor = [16, 42, 67];
-            data.cell.styles.textColor = [255, 255, 255];
-            data.cell.styles.fontStyle = 'bold';
-          }
+         if (isTotalRow) {
+  if (!isPercentCol) {
+    data.cell.styles.fillColor = [16, 42, 67];
+    data.cell.styles.textColor = [255, 255, 255];
+  } else {
+    data.cell.styles.textColor = [0, 0, 0];
+  }
+  data.cell.styles.fontStyle = 'bold';
+}
+
         }
       });
 
@@ -198,7 +226,8 @@
     while (doc.getNumberOfPages() > 1) doc.deletePage(doc.getNumberOfPages());
 
     const legendY = doc.lastAutoTable.finalY + 7;
-    drawLegend(doc, legendY);
+    const pageWidth = doc.internal.pageSize.getWidth();
+    drawLegend(doc, legendY, pageWidth);
 
     doc.save(`${title.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase() || 'district-report'}.pdf`);
     showToast('Your PDF has been downloaded.');
