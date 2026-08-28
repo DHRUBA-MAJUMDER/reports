@@ -42,6 +42,12 @@
   function percent(part, whole) { const result = numericValue(whole) ? (numericValue(part) / numericValue(whole)) * 100 : 0; return `${result.toFixed(2)}%`; }
   function showToast(message) { toast.textContent = message; toast.classList.add('show'); window.setTimeout(() => toast.classList.remove('show'), 3200); }
   function formatBytes(bytes) { return `${(bytes / 1024).toFixed(1)} KB`; }
+  // YE NAYA FUNCTION YAHA PASTE KARO
+function toTitleCase(value) {
+  return String(value ?? '')
+    .toLowerCase()
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
 
   function setFile(file) {
     if (!file) return;
@@ -85,7 +91,7 @@
     const headers = state.headers;
     const columns = [
       { label: '#', get: (_, index) => index + 1 },
-      { label: 'District', get: (row) => valueFor(row, headers, aliases.district) },
+      { label: 'District', get: (row) => toTitleCase(valueFor(row, headers, aliases.district)) },
       { label: 'Total schools', get: (row) => displayNumber(valueFor(row, headers, aliases.totalSchools)) },
       { label: 'M-School Reported', get: (row) => displayNumber(valueFor(row, headers, aliases.mealSchools)) },
       { label: 'Reporting %', get: (row) => percent(valueFor(row, headers, aliases.mealSchools), valueFor(row, headers, aliases.totalSchools)), percentage: true },
@@ -165,7 +171,7 @@
       const total = valueFor(row, headers, aliases.totalSchools);
       const meal = valueFor(row, headers, aliases.mealSchools);
       const daily = valueFor(row, headers, aliases.dailySchools);
-      return [index + 1, valueFor(row, headers, aliases.district), displayNumber(total), displayNumber(meal), percent(meal, total), displayNumber(daily), percent(daily, total), displayNumber(valueFor(row, headers, aliases.mealsServed))];
+    return [index + 1, toTitleCase(valueFor(row, headers, aliases.district)), displayNumber(total), displayNumber(meal), percent(meal, total), displayNumber(daily), percent(daily, total), displayNumber(valueFor(row, headers, aliases.mealsServed))];
     });
     const totalSchools = state.rows.reduce((sum, row) => sum + numericValue(valueFor(row, headers, aliases.totalSchools)), 0);
     const totalMeal = state.rows.reduce((sum, row) => sum + numericValue(valueFor(row, headers, aliases.mealSchools)), 0);
@@ -187,7 +193,7 @@
 
       doc.autoTable({
         startY: 33,
-        head: [['S/N', 'District', ['Total school'], ['M-School Reported'], ['Reporting %'], ['Daily schools Reported'], ['Reporting %'], ['T-Meal served']]],
+        head: [['S/N', 'District', ['Total school'], ['Monthly School Reported'], ['Reporting %'], ['Daily schools Reported'], ['Reporting %'], ['Total Meal served']]],
         body,
         theme: 'grid',
         margin: { left: 10, right: 10, top: 33, bottom: 18 },
@@ -205,13 +211,9 @@
             data.cell.styles.textColor = textColorForPercent(value);
             data.cell.styles.fontStyle = 'bold';
           }
-         if (isTotalRow) {
-  if (!isPercentCol) {
-    data.cell.styles.fillColor = [16, 42, 67];
-    data.cell.styles.textColor = [255, 255, 255];
-  } else {
-    data.cell.styles.textColor = [0, 0, 0];
-  }
+    if (isTotalRow) {
+  data.cell.styles.fillColor = [255, 249, 196];
+  data.cell.styles.textColor = [0, 0, 0];
   data.cell.styles.fontStyle = 'bold';
 }
 
