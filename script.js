@@ -159,7 +159,7 @@ function toTitleCase(value) {
     const landscape = document.getElementById('landscapeToggle').checked;
     const headers = state.headers;
     const reportDate = valueFor(state.rows[0], headers, aliases.date) || new Date().toLocaleDateString('en-GB');
-    const title = reportTitle.value.trim() || 'District Wise Meal Served Statistics';
+    const title = reportTitle.value.trim() || 'District Wise Meal Served Statistics n/Low performing districts';
 
     const sortedRows = state.rows.map(row => {
       const total = valueFor(row, headers, aliases.totalSchools);
